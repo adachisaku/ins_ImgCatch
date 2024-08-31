@@ -25,7 +25,7 @@ class PrintLogger(io.StringIO):
 
 def make_response(username, ec, page_no=1, images_count=0, base_folder_name="",
                   download_all_in_one_folder=True):
-    global tnl
+    global tnl #记录上一张图片的url
     url = "https://www.instagram.com/graphql/query"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -57,7 +57,7 @@ def make_response(username, ec, page_no=1, images_count=0, base_folder_name="",
 
     if match1:
         ex_response = response.text.replace('\\u0026', '&')
-        matches = re.findall(r'\{"url":"([^"]+)","height":1800,"width":1440}', ex_response)
+        matches = re.findall(r'\{"url":"([^"]+)","height":1800,"width":1440}', ex_response) #筛选最大尺寸图片
 
         if download_all_in_one_folder:
             folder_name = base_folder_name
@@ -97,7 +97,7 @@ def start_download(username, base_folder_name, download_all_in_one_folder):
     progress = 1
     make_response(username, "", 1, 0, base_folder_name, download_all_in_one_folder)
 
-def toggle_pause_resume(progress_callback):
+def toggle_pause_resume(progress_callback):  #控制暂停和继续下载
     global progress
     if progress == 1:
         progress = 0
@@ -186,7 +186,7 @@ def create_gui():
     text_area_label = tk.Label(text_area_frame, text="下载日志：")
     text_area_label.pack(anchor=tk.W)
     global text_area
-    text_area = scrolledtext.ScrolledText(text_area_frame, wrap=tk.WORD, height=15)
+    text_area = scrolledtext.ScrolledText(text_area_frame, wrap=tk.WORD, height=20)
     text_area.pack(fill=tk.BOTH, expand=True)
 
     sys.stdout = PrintLogger(lambda msg: text_area.insert(tk.END, msg))
