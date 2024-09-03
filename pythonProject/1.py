@@ -4,7 +4,6 @@ import re
 import os
 import tkinter as tk
 from tkinter import messagebox, filedialog, scrolledtext
-from PIL import Image, ImageTk
 import io
 import sys
 import threading
