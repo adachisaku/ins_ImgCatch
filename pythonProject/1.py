@@ -7,11 +7,13 @@ from tkinter import messagebox, filedialog, scrolledtext
 import io
 import sys
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 global progress
 progress = 1
 seen_images = set()
 tnl = ""
+lock = threading.Lock()
 
 class PrintLogger(io.StringIO):
     def __init__(self, callback):
@@ -66,30 +68,53 @@ def make_response(username, ec, page_no=1, images_count=0, base_folder_name="",
 
         images_count += len(matches)
 
-        for index, img_url in enumerate(matches):
-            while progress == 0:
-                time.sleep(0.1)
-            try:
-                img_num = re.search(r'/(\d+_\d+_\d+)_n', img_url)
-                if img_num and img_num.group(1) == tnl:
-                    images_count -= 1
-                    continue
-                else:
-                    tnl = img_num.group(1)
-                img_data = requests.get(img_url).content
-                seen_images.add(img_url)
-                img_path = os.path.join(folder_name, f"image_{images_count - len(matches) + index + 1}.jpg")
-                with open(img_path, 'wb') as img_file:
-                    img_file.write(img_data)
-                print(f"Saved: {img_path}")
-            except Exception as e:
-                print(f"保存失败 {img_url}:\n {e}")
+        with ThreadPoolExecutor(max_workers=5) as executor:  # max_workers 根据需要调整
+            futures = []
+            for index, img_url in enumerate(matches):
+                if progress == 0:
+                    while progress == 0:
+                        time.sleep(0.1)
+                futures.append(executor.submit(download_image, img_url, folder_name, index, images_count, matches))
+
+            for future in as_completed(futures):
+                pass
 
         new_ec = match1.group(1)
         time.sleep(3)
         make_response(username, new_ec, page_no + 1, images_count, base_folder_name, download_all_in_one_folder)
     else:
         print(f"获取完成。总计页面数: {page_no}, 总计图片数: {images_count}.")
+
+
+def download_image(img_url, folder_name, img_index, images_count, matches):
+    """下载单个图片并保存"""
+    global tnl  # 记录上一张图片的url
+    try:
+        img_num = re.search(r'/(\d+_\d+_\d+)_n', img_url)
+        if img_num:
+            with lock:
+                current_tnl = img_num.group(1)
+                if current_tnl == tnl:
+                    return  # 如果当前图片与上一张重复则跳过
+                else:
+                    tnl = current_tnl
+
+        while progress == 0:
+            time.sleep(0.1)
+
+        response = requests.get(img_url, timeout=10)
+        response.raise_for_status()  # 检查请求是否成功
+        img_data = response.content
+
+        with lock:
+            seen_images.add(img_url)
+
+        img_path = os.path.join(folder_name, f"image_{images_count - len(matches) + img_index + 1}.jpg")
+        with open(img_path, 'wb') as img_file:
+            img_file.write(img_data)
+        print(f"保存至 {img_path}")
+    except Exception as e:
+        print(f"保存失败 {img_url}:\n {e}")
 
 def start_download(username, base_folder_name, download_all_in_one_folder):
     global progress
