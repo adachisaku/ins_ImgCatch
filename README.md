@@ -56,7 +56,10 @@
 ## 关于视频爬取
 url就在同一个url请求里的video_version里。
 印象之前是加密格式所以没有爬取，现在不是了。
+
 ## 开发者
 adachisaku
+
 ## 开源协议
+
 该项目采用 MIT License。
