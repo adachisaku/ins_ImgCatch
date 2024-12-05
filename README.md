@@ -9,9 +9,13 @@
 支持多线程下载，能够在后台持续下载图像。
 ## 依赖
 1.requests：用于发送 HTTP 请求。
+
 2.re：用于处理正则表达式。
+
 3.tkinter：用于创建 GUI。 
+
 4.threading：用于并发下载。
+
 5.os：用于文件和目录操作。
 
 ## 使用方法
@@ -42,7 +46,8 @@
 使用时确保目标文件夹路径有效，并且具有足够的磁盘空间来存储下载的照片。
 
 ## 爬虫原理
-向https://www.instagram.com/graphql/query发出请求，username对应用户名，after对应页面
+向https://www.instagram.com/graphql/query 发出请求，username对应用户名，after对应页面
+
 通过循环make_response并改变end_coursor参数，实现翻页效果
 
 该api返回的不是标准的json格式，需要replace('\\u0026', '&')使url能够正常访问
@@ -52,6 +57,6 @@
 url就在同一个url请求里的video_version里。
 印象之前是加密格式所以没有爬取，现在不是了。
 ## 开发者
-nanashi
+adachisaku
 ## 开源协议
 该项目采用 MIT License。
